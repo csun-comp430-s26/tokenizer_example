@@ -1,3 +1,4 @@
+// FOR MONDAY: redo as record
 public class LeftParenToken implements Token {
     public LeftParenToken() {}
 
