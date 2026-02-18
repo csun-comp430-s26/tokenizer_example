@@ -103,7 +103,7 @@ public class Tokenizer {
                 return retval;
             } else {
                 throw new TokenizerException("Found unrecognized character: " +
-                                             input.charAt(position) + " at position" +
+                                             input.charAt(position) + " at position " +
                                              position);
             }
         }
