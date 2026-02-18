@@ -124,4 +124,12 @@ public class Tokenizer {
         throws TokenizerException {
         return new Tokenizer(input).tokenize();
     }
+
+    public static void main(String[] args) throws TokenizerException {
+        if (args.length == 1) {
+            System.out.println(tokenize(args[0]));
+        } else {
+            System.out.println("Needs a string to tokenize");
+        }
+    }
 }
