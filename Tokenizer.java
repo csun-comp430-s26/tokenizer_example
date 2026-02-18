@@ -1,4 +1,6 @@
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 
 public class Tokenizer {
     public final String input;
@@ -16,7 +18,31 @@ public class Tokenizer {
         }
     }
 
-    // Wednesday: symbols, tie everything together
+    // assumes position is initially in bounds
+    public Optional<Token> readSymbol() {
+        char c = input.charAt(position);
+        if (c == '(') {
+            position++;
+            return Optional.of(new LeftParenToken());
+        } else if (c == ')') {
+            position++;
+            return Optional.of(new RightParenToken());
+        } else if (c == '+') {
+            position++;
+            return Optional.of(new PlusToken());
+        } else if (c == '-') {
+            position++;
+            return Optional.of(new MinusToken());
+        } else if (c == '=') {
+            position++;
+            return Optional.of(new SingleEqualsToken());
+        } else if (c == ';') {
+            position++;
+            return Optional.of(new SemicolonToken());
+        } else {
+            return Optional.empty();
+        }
+    } // readSymbol
     
     // assumes position is initially in bounds
     public Optional<Token> readInteger() {
@@ -58,9 +84,44 @@ public class Tokenizer {
         }
     }
 
+    // returns empty if there are no remaining tokens
+    public Optional<Token> readToken() throws TokenizerException {
+        skipWhitespace();
+        if (position >= input.length()) {
+            return Optional.empty();
+        } else {
+            Optional<Token> retval = readSymbol();
+            if (retval.isPresent()) {
+                return retval;
+            }
+            retval = readInteger();
+            if (retval.isPresent()) {
+                return retval;
+            }
+            retval = readIdentifierOrReservedWord();
+            if (retval.isPresent()) {
+                return retval;
+            } else {
+                throw new TokenizerException("Found unrecognized character: " +
+                                             input.charAt(position) + " at position" +
+                                             position);
+            }
+        }
+    }
+                    
+
+    public List<Token> tokenize() throws TokenizerException {
+        final List<Token> retval = new ArrayList<Token>();
+        Optional<Token> token = readToken();
+        while (token.isPresent()) {
+            retval.add(token.get());
+            token = readToken();
+        }
+        return retval;
+    }
+    
     public static List<Token> tokenize(final String input)
         throws TokenizerException {
-        int position = skipWhitespace(input);
-        if (position < input.length()) {
+        return new Tokenizer(input).tokenize();
     }
 }
