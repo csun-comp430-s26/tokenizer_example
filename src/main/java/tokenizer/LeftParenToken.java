@@ -1,3 +1,5 @@
+package tokenizer;
+
 public record LeftParenToken() implements Token {}
 
 // public class LeftParenToken implements Token {
