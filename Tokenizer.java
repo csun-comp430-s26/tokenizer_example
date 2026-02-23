@@ -132,4 +132,6 @@ public class Tokenizer {
             System.out.println("Needs a string to tokenize");
         }
     }
+
+    // FOR MONDAY: build tools, unit testing, code coverage
 }
