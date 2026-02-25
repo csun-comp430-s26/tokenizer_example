@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 public class TokenizerTest {
@@ -25,6 +26,12 @@ public class TokenizerTest {
                      Tokenizer.tokenize("x"));
     }
 
+    @Test
+    public void testIdentifierWhitespace() throws TokenizerException {
+        assertEquals(Arrays.asList(new IdentifierToken("x")),
+                     Tokenizer.tokenize("x "));
+    }
+    
     @Test
     public void testInteger() throws TokenizerException {
         assertEquals(Arrays.asList(new IntegerToken(1)),
@@ -71,6 +78,12 @@ public class TokenizerTest {
     public void testSemicolon() throws TokenizerException {
         assertEquals(Arrays.asList(new SemicolonToken()),
                      Tokenizer.tokenize(";"));
+    }
+
+    @Test
+    public void testInvalid() throws TokenizerException {
+        assertThrows(TokenizerException.class,
+                     () -> Tokenizer.tokenize("$"));
     }
 }
 
