@@ -1,6 +1,7 @@
 package tokenizer;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class Parser {
     private final List<Token> tokens;
@@ -29,36 +30,67 @@ public class Parser {
     } // parseOp
 
     // exp ::= IDENTIFIER | INTEGER | `(` exp `)` | exp op exp
-    public ParseResult<Exp> parseExp(final int startPosition) throws ParseException { ... }
-    
+    public ParseResult<Exp> parseExp(final int startPosition) throws ParseException {
+        final Token firstToken = getToken(startPosition);
+        if (firstToken instanceof IdentifierToken idToken) {
+            return new ParseResult<Exp>(new IdentifierExp(idToken.name),
+                                        startPosition + 1);
+        } else if (firstToken instanceof IntegerToken intToken) {
+            return new ParseResult<Exp>(new IntegerExp(intToken.value),
+                                        startPosition + 1);
+        } else if (firstToken instanceof LeftParenToken) {
+            final ParseException<Exp> exp = parseExp(startPosition + 1);
+            assertTokenHereIs(exp.nextPos, new RightParenToken());
+            return new ParseResult<Exp>(new ParenExp(exp.result),
+                                        exp.nextPos + 1);
+        } else {
+            // exp op exp
+            final ParseResult<Exp> leftExp = parseExp(startPosition);
+            
+    }
+
+    public void assertTokenHereIs(final int position, final Token expected) throws ParseException {
+        final Token received = getToken(position);
+        if (!expected.equals(received)) {
+            throw new ParseException("Expected token: " + expected.toString() +
+                                     "; received token: " + received.toString());
+        }
+    }
+                                     
     // stmt ::= `let` IDENTIFIER `=` exp `;`
     public ParseResult<Stmt> parseStmt(final int startPosition) throws ParseException {
-        final Token letToken = getToken(startPosition);
-        if (!letToken instanceof LetToken) {
-            throw new ParseException("Expected let, got: " + letToken.toString());
+        assertTokenHereIs(startPosition, new LetToken());
+        final Token maybeIdToken = getToken(startPosition + 1);
+        if (maybeIdToken instanceof IdentifierToken idToken) {
+            assertTokenHereIs(startPosition + 2, new EqualsToken());
+            final ParseResult<Exp> exp = parseExp(startPosition + 3);
+            assertTokenHereIs(exp.nextPos, new SemicolonToken());
+            return new ParseResult<Stmt>(new LetStmt(idToken.name, exp.result),
+                                         exp.nextPos + 1);
         } else {
-            final Token idToken = getToken(startPosition + 1);
-            if (!idToken instanceof IdentifierToken) {
-                throw new ParseException("Expected identifier, got: " + idToken.toString());
-            } else {
-                final Token equalsToken = getToken(startPosition + 2);
-                if (!equalsToken instanceof SingleEqualsToken) {
-                    throw new ParseException("Expected =, got: " + equalsToken.toString());
-                } else {
-                    final ParseResult<Exp> exp = parseExp(startPosition + 3);
-                    final Token semicolonToken = getToken(exp.nextPos);
-                    if (!semicolonToken instanceof SemicolonToken) {
-                        throw new ParseException("Expected ;, got: " + semicolonToken.toString());
-                    } else {
-                        return new ParseResult<Stmt>(new LetStmt(((IdentifierToken)idToken).name,
-                                                                 exp.result),
-                                                     exp.nextPos + 1);
-                    }
-                }
-            }
+            throw new ParseException("Expected identifier, got: " + idToken.toString());
         }
     } // parseStmt
-        
+
+    // program ::= stmt*
+    public Program parseProgram() throws ParseException {
+        List<Stmt> stmts = new ArrayList<Stmt>();
+        int currentPosition = 0;
+        while (currentPosition < tokens.size()) {
+            final ParseResult<Stmt> stmt = parseStmt(currentPosition);
+            stmts.add(stmt.result);
+            currentPosition = stmt.nextPos;
+        }
+
+        if (currentPosition == tokens.size()) {
+            return new Program(stmts);
+        } else {
+            return new ParseException("Tokens remaining at end: " + currentPosition);
+        }
+    }
+
     public static Program parseProgram(final List<Token> tokens)
-        throws ParseException { ... }
+        throws ParseException {
+        return new Parser(tokens).parseProgram();
+    }
 }
