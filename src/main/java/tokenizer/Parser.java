@@ -29,8 +29,8 @@ public class Parser {
         }
     } // parseOp
 
-    // exp ::= IDENTIFIER | INTEGER | `(` exp `)` | exp op exp
-    public ParseResult<Exp> parseExp(final int startPosition) throws ParseException {
+    // primaryExp ::= IDENTIFIER | INTEGER | `(` exp `)`
+    public ParseResult<Exp> parsePrimaryExp(final int startPosition) throws ParseException {
         final Token firstToken = getToken(startPosition);
         if (firstToken instanceof IdentifierToken idToken) {
             return new ParseResult<Exp>(new IdentifierExp(idToken.name),
@@ -44,9 +44,20 @@ public class Parser {
             return new ParseResult<Exp>(new ParenExp(exp.result),
                                         exp.nextPos + 1);
         } else {
-            // exp op exp
-            final ParseResult<Exp> leftExp = parseExp(startPosition);
-            
+            throw new ParseException("Expected primary exp; found: " + firstToken.toString());
+        }
+    }
+
+    // addExp ::= primaryExp ((`+` | `-`) primaryExp)*
+    public ParseResult<Exp> parseAddExp(final int startPosition) throws ParseException {
+        final ParseResult<Exp> initialPrimaryExp = parsePrimaryExp(startPosition);
+        final ParseResult<List<Pair<Op, Exp>>> starPart = ...;
+        // FOR WEDNESDAY: construct AST, don't use list
+    }
+    
+    // exp ::= addExp
+    public ParseResult<Exp> parseExp(final int startPosition) throws ParseException {
+        return parseAddExp(startPosition);
     }
 
     public void assertTokenHereIs(final int position, final Token expected) throws ParseException {
