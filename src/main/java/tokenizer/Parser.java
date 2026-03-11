@@ -9,9 +9,9 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    public Token getToken(final int position) throws TokenizerException {
+    public Token getToken(final int position) throws ParseException {
         if (position < 0 || position >= tokens.size()) {
-            throw new TokenizerException("Tried to read token at out-of-bounds position: " + position);
+            throw new ParseException("Tried to read token at out-of-bounds position: " + position);
         } else {
             return tokens.get(position);
         }
@@ -33,13 +33,13 @@ public class Parser {
     public ParseResult<Exp> parsePrimaryExp(final int startPosition) throws ParseException {
         final Token firstToken = getToken(startPosition);
         if (firstToken instanceof IdentifierToken idToken) {
-            return new ParseResult<Exp>(new IdentifierExp(idToken.name),
+            return new ParseResult<Exp>(new IdentifierExp(idToken.name()),
                                         startPosition + 1);
         } else if (firstToken instanceof IntegerToken intToken) {
-            return new ParseResult<Exp>(new IntegerExp(intToken.value),
+            return new ParseResult<Exp>(new IntegerExp(intToken.value()),
                                         startPosition + 1);
         } else if (firstToken instanceof LeftParenToken) {
-            final ParseException<Exp> exp = parseExp(startPosition + 1);
+            final ParseResult<Exp> exp = parseExp(startPosition + 1);
             assertTokenHereIs(exp.nextPos, new RightParenToken());
             return new ParseResult<Exp>(new ParenExp(exp.result),
                                         exp.nextPos + 1);
@@ -91,13 +91,13 @@ public class Parser {
         assertTokenHereIs(startPosition, new LetToken());
         final Token maybeIdToken = getToken(startPosition + 1);
         if (maybeIdToken instanceof IdentifierToken idToken) {
-            assertTokenHereIs(startPosition + 2, new EqualsToken());
+            assertTokenHereIs(startPosition + 2, new SingleEqualsToken());
             final ParseResult<Exp> exp = parseExp(startPosition + 3);
             assertTokenHereIs(exp.nextPos, new SemicolonToken());
-            return new ParseResult<Stmt>(new LetStmt(idToken.name, exp.result),
+            return new ParseResult<Stmt>(new LetStmt(idToken.name(), exp.result),
                                          exp.nextPos + 1);
         } else {
-            throw new ParseException("Expected identifier, got: " + idToken.toString());
+            throw new ParseException("Expected identifier, got: " + maybeIdToken.toString());
         }
     } // parseStmt
 
@@ -114,7 +114,7 @@ public class Parser {
         if (currentPosition == tokens.size()) {
             return new Program(stmts);
         } else {
-            return new ParseException("Tokens remaining at end: " + currentPosition);
+            throw new ParseException("Tokens remaining at end: " + currentPosition);
         }
     }
 
