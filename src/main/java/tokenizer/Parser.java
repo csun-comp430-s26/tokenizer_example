@@ -40,9 +40,9 @@ public class Parser {
                                         startPosition + 1);
         } else if (firstToken instanceof LeftParenToken) {
             final ParseResult<Exp> exp = parseExp(startPosition + 1);
-            assertTokenHereIs(exp.nextPos, new RightParenToken());
-            return new ParseResult<Exp>(new ParenExp(exp.result),
-                                        exp.nextPos + 1);
+            assertTokenHereIs(exp.nextPos(), new RightParenToken());
+            return new ParseResult<Exp>(new ParenExp(exp.result()),
+                                        exp.nextPos() + 1);
         } else {
             throw new ParseException("Expected primary exp; found: " + firstToken.toString());
         }
@@ -51,19 +51,19 @@ public class Parser {
     // addExp ::= primaryExp ((`+` | `-`) primaryExp)*
     public ParseResult<Exp> parseAddExp(final int startPosition) throws ParseException {
         final ParseResult<Exp> initialPrimaryExp = parsePrimaryExp(startPosition);
-        Exp currentExp = initialPrimaryExp.result;
-        int currentPosition = initialPrimaryExp.nextPos;
+        Exp currentExp = initialPrimaryExp.result();
+        int currentPosition = initialPrimaryExp.nextPos();
         while (true) {
             try {
                 final Token curToken = getToken(currentPosition);
                 if (curToken instanceof PlusToken) {
                     final ParseResult<Exp> nextExp = parsePrimaryExp(currentPosition + 1);
-                    currentExp = new BinopExp(currentExp, new PlusOp(), nextExp.result);
-                    currentPosition = nextExp.nextPos;
+                    currentExp = new BinopExp(currentExp, new PlusOp(), nextExp.result());
+                    currentPosition = nextExp.nextPos();
                 } else if (curToken instanceof MinusToken) {
                     final ParseResult<Exp> nextExp = parsePrimaryExp(currentPosition + 1);
-                    currentExp = new BinopExp(currentExp, new MinusOp(), nextExp.result);
-                    currentPosition = nextExp.nextPos;
+                    currentExp = new BinopExp(currentExp, new MinusOp(), nextExp.result());
+                    currentPosition = nextExp.nextPos();
                 } else {
                     throw new ParseException("Expected + or -, got: " + curToken.toString());
                 }
@@ -93,9 +93,9 @@ public class Parser {
         if (maybeIdToken instanceof IdentifierToken idToken) {
             assertTokenHereIs(startPosition + 2, new SingleEqualsToken());
             final ParseResult<Exp> exp = parseExp(startPosition + 3);
-            assertTokenHereIs(exp.nextPos, new SemicolonToken());
-            return new ParseResult<Stmt>(new LetStmt(idToken.name(), exp.result),
-                                         exp.nextPos + 1);
+            assertTokenHereIs(exp.nextPos(), new SemicolonToken());
+            return new ParseResult<Stmt>(new LetStmt(idToken.name(), exp.result()),
+                                         exp.nextPos() + 1);
         } else {
             throw new ParseException("Expected identifier, got: " + maybeIdToken.toString());
         }
@@ -107,8 +107,8 @@ public class Parser {
         int currentPosition = 0;
         while (currentPosition < tokens.size()) {
             final ParseResult<Stmt> stmt = parseStmt(currentPosition);
-            stmts.add(stmt.result);
-            currentPosition = stmt.nextPos;
+            stmts.add(stmt.result());
+            currentPosition = stmt.nextPos();
         }
 
         if (currentPosition == tokens.size()) {
