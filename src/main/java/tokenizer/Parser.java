@@ -51,8 +51,26 @@ public class Parser {
     // addExp ::= primaryExp ((`+` | `-`) primaryExp)*
     public ParseResult<Exp> parseAddExp(final int startPosition) throws ParseException {
         final ParseResult<Exp> initialPrimaryExp = parsePrimaryExp(startPosition);
-        final ParseResult<List<Pair<Op, Exp>>> starPart = ...;
-        // FOR WEDNESDAY: construct AST, don't use list
+        Exp currentExp = initialPrimaryExp.result;
+        int currentPosition = initialPrimaryExp.nextPos;
+        while (true) {
+            try {
+                final Token curToken = getToken(currentPosition);
+                if (curToken instanceof PlusToken) {
+                    final ParseResult<Exp> nextExp = parsePrimaryExp(currentPosition + 1);
+                    currentExp = new BinopExp(currentExp, new PlusOp(), nextExp.result);
+                    currentPosition = nextExp.nextPos;
+                } else if (curToken instanceof MinusToken) {
+                    final ParseResult<Exp> nextExp = parsePrimaryExp(currentPosition + 1);
+                    currentExp = new BinopExp(currentExp, new MinusOp(), nextExp.result);
+                    currentPosition = nextExp.nextPos;
+                } else {
+                    throw new ParseException("Expected + or -, got: " + curToken.toString());
+                }
+            } catch (final ParseException e) {
+                return new ParseResult<Exp>(currentExp, currentPosition);
+            }
+        }
     }
     
     // exp ::= addExp
